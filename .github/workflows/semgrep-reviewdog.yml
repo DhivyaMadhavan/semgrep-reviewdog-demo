@@ -16,11 +16,19 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Fix: Use the valid, community-maintained Semgrep action for Reviewdog
-      - name: Run Semgrep with Reviewdog
-        uses: g-wilson/action-semgrep@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
-          level: warning
-          fail_on_error: false
+      # 1. Install Semgrep natively via Python pip instead of a Docker action
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      # 2. Setup standard Reviewdog binary on host runner
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@v1
+
+      # 3. Run Semgrep and stream JSON results straight to Reviewdog
+      - name: Run Scan and Post Comments
+        env:
+          REVIEWDOG_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Use standard open-source rules; bypass docker pull networks
+          semgrep ci --config=p/default --json > semgrep-results.json || true
+          cat semgrep-results.json | reviewdog -f=semgrep -reporter=github-pr-review -level=warning
