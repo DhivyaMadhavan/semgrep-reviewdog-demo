@@ -13,9 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: reviewdog/action-semgrep@v1
+      # Fix: Use the valid, community-maintained Semgrep action for Reviewdog
+      - name: Run Semgrep with Reviewdog
+        uses: g-wilson/action-semgrep@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
